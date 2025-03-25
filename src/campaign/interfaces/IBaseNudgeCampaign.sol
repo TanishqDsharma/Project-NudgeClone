@@ -7,7 +7,7 @@ pragma solidity  ^0.8.28;
  * errors, structs, events, and functions necessary to manage user participation.
  */
 
-interface IBaseNudgeCamapaign {
+interface IBaseNudgeCampaign {
 
     // ERRORS
 
