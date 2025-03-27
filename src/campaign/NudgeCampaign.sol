@@ -12,6 +12,9 @@ import "./interfaces/INudgeCampaignFactory.sol";
 
 contract NudgeCampaign is INudgeCampaign,AccessControl{
 
+using Math for uint256;
+using SafeERC20 for IERC20;
+
 // Defines unique role identifer for the campaign identifier. This keccak256 computes a 
 // unique hash and later its used as an identifier for access control.
     bytes32 public constant CAMPAIGN_ADMIN_ROLE = keccak256("CAMPAIGN_ADMIN_ROLE");
@@ -91,7 +94,7 @@ constructor(
     uint256 rewardPPQ_,
     address campaignAdmin,
     uint256 startTimestamp_,
-    uint256 feeBps_,
+    uint16 feeBps_,
     address alternativeWithdrawalAddress_,
     uint256 campaignId_
 ){
@@ -103,9 +106,9 @@ constructor(
     if(startTimestamp_!=0 && startTimestamp_<=block.timestamp){
         revert InvalidCampaignSettings();
     }
-// Creates new contract instance and returns the address which can the be used as an instance
-// of the interface
-    factory = new InudgeCampaignFactory(msg.sender);
+
+
+    factory =  InudgeCampaignFactory(msg.sender);
     holdingPeriodInSeconds=holdingPeriodInSeconds_;
     feeBps=feeBps_;
     alternativeWithdrawalAddress=alternativeWithdrawalAddress_;
@@ -118,31 +121,76 @@ constructor(
 
     // Compute Scaling Factors based on token decimals
 
+    // This determines the number of decimals for the targetToken_ , if the token is ETH then it assumes
+    // 18 decimals else it queries the ERC20 tokens decimals count using the IERC20Metadata function.
     uint256 targetDecimals = targetToken_ == NATIVE_TOKEN_ETH ? 18 : 
     IERC20Metadata(targetToken_).decimals();
 
+    // This determines the number of decimals for the rewardToken_, if the token is ETH then it assumes 18 
+    // decimals else it queries the ERC20 tokens decimals count using the IERC20Metadata function.
+    
     uint256 rewardDecimals = rewardToken_ == NATIVE_TOKEN_ETH ? 18 : 
     IERC20Metadata(rewardToken_).decimals();
 
     // Normalizing scaling factor to 18 decimals
 
+    // The below two lines normalize the decimals of both token to 18 decimals. If a token has fewer 
+    // than 18 decimals, this scaling factor ensures calculations work correctly by adjusting values 
+    // accordingly.
+
     targetScalingFactor = 10 ** (18-targetDecimals);
     rewardScalingFactor = 10 ** (18-rewardDecimals);
 
+    // This assigns the CAMPAIGN_ADMIN_ROLE to the campaignAdmin address.
     _grantRole(CAMPAIGN_ADMIN_ROLE, campaignAdmin);
-
+    
+    // If startTimestamp_ is 0 it assigns the startTimestamp to current block.timestamp otherwise specifies
+    // the provided timestamp
     startTimestamp = startTimestamp_ == 0 ? block.timestamp:startTimestamp_;
 
+    // This sets isCampaignActive to true if the campaign's startTimestamp has already passed.
     isCampaignActive = startTimestamp<=block.timestamp;
 
+    rewardPPQ = rewardPPQ_;
 
+    // This initializes _manuallyDeactivated to false, meaning the campaign starts in an active 
+    // state unless manually turned off later.
     _manuallyDeactivated = false;
-
-
-        
-
-
 }
 
+   ///////////////////
+  //// Modifier /////
+ ///////////////////
+
+ ///@notice Ensures the campaign is not paused
+
+ modifier whenNotPaused(){
+    // Calls factory.isCampaignPaused(address(this)) to check if the campaign is paused.
+    if(factory.isCampaignPaused(address(this))) revert CampaignPaused();
+    _;
+ }
+
+ /**
+  *@notice It ensures that only authorized entities (either the Factory contract itself or Nudge admins)
+  can execute certain functions.
+ */
+
+ modifier onlyFactoryOrNudgeAdmin(){
+
+    // Checks if the caller (msg.sender) has the NUDGE_ADMIN_ROLE in the factory contract and 
+    //  checks if msg.sender is NOT the factory contract.
+    if(!factory.hasRole(factory.NUDGE_ADMIN_ROLE(), msg.sender) && msg.sender!= address(factory)){
+        revert Unauthorized();
+    }
+    _;
+ }
+
+modifier onlyNudgeOperator() {
+    // Checks if the caller (msg.sender) has the NUDGE_OPERATOR_ROLE in the factoru contract
+        if (!factory.hasRole(factory.NUDGE_OPERATOR_ROLE(), msg.sender)) {
+            revert Unauthorized();
+        }
+        _;
+    }
 
 }
