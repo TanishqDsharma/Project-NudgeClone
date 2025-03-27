@@ -15,6 +15,8 @@ contract NudgeCampaign is INudgeCampaign,AccessControl{
 using Math for uint256;
 using SafeERC20 for IERC20;
 
+
+
 // Defines unique role identifer for the campaign identifier. This keccak256 computes a 
 // unique hash and later its used as an identifier for access control.
     bytes32 public constant CAMPAIGN_ADMIN_ROLE = keccak256("CAMPAIGN_ADMIN_ROLE");
@@ -192,5 +194,79 @@ modifier onlyNudgeOperator() {
         }
         _;
     }
+
+
+/**
+ * @notice This function calculates the reward amount the user should receive for a given toAmounts of token
+ * taking into account a reward multiplier expressed in parts per quadrillion (PPQ)
+ * @param toAmount Amount of tokens
+ */
+function getRewardAmountIncludingFees(uint256 toAmount) public view returns(uint256){
+
+    // It starts with checking whether both scaling factors are equal to 1. These scaling factors are used 
+    // to adjust amounts to a common 18-decimal format.
+    if(targetScalingFactor==1&&rewardScalingFactor==1){
+
+        // To calculate the rewards it multiples toAmount with rewardPPQ and then divides with PPQ_DENOMINATOR
+        return toAmount.mulDiv(rewardPPQ,PPQ_DENOMINATOR);
+    }
+
+    // Next, scale amount to 18 decimals:
+
+    uint256 scaledAmount =  toAmount*targetScalingFactor;
+    uint256 rewardAmountIn18Decimals = scaledAmount.mulDiv(rewardPPQ,PPQ_DENOMINATOR);
+
+    // Scale back to reward token decimals
+    return rewardAmountIn18Decimals/rewardScalingFactor;
+}
+
+/**
+ * 
+ */
+function handleReallocation(
+    uint256 campaignId_,
+    address userAddress,
+    address toToken,
+    uint256 toAmount,
+    bytes memory data
+) external payable whenNotPaused{
+
+    // Check if campaign is active or can be activated
+
+    // Check if the msg.sender is authorized for swapping
+    if(!factory.hasRole(factory.SWAP_CALLER_ROLE(), msg.sender)){
+        revert UnauthorizedSwapCaller();
+    } 
+
+    //  When toToken is not equal to target token
+    if(toToken!=targetToken){
+        revert InvalidToTokenRecevied(toToken);
+    }
+
+    // When campaignId doesn't match revert is generated
+    if(campaignId_!=campaignId){
+        revert InvalidCampaignId();
+    }
+
+    // The value user will be getting
+    uint256 amountReceived;
+
+    // If the token is ETH token then provided value is amountReceived
+    if(toToken==NATIVE_TOKEN_ETH){
+        amountReceived = msg.value;
+    }
+
+    else{
+        // If the msg.value is greater than zero then a revert will happen
+        if(msg.value>0){
+            revert InvalidToTokenRecevied(NATIVE_TOKEN_ETH);
+        }
+    }
+
+    IERC20 tokenReceived = IERC20(toToken);
+    uint256 balanceOfSender = tokenReceived.balanceOf(msg.sender);
+    uint256 balanceBefore = getBalanceOfSelf
+
+}
 
 }
