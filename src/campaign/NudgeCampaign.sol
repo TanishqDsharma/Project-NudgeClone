@@ -331,6 +331,11 @@ function handleReallocation(
 /////// View Functions ///////////// 
 ///////////////////////////////////
 
+    /**
+     * @notice If the token is ETH we check the contracts balance otherwise 
+     * we check the balance for ERC20 
+     * @param token Takes the address of the token to get the balance
+     */
 
     function getBalanceOfSelf(address token) public view returns(uint256){
         if(token==NATIVE_TOKEN_ETH){
