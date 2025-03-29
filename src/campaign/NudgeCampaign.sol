@@ -358,6 +358,31 @@ function invalidateParticipations(uint256[] calldata pIDs)
 
 }
 
+/**
+ * @notice Allows the campaign admin to withdraw rewards 
+ * from the contract ensuring that only available rewards are withdrawn
+ * @param amount Amount to withdraw
+ */
+
+function withdrawRewards(uint256 amount) external onlyRole(CAMPAIGN_ADMIN_ROLE){
+    // claimableRewardAmount: Retrieves the total available rewards that can be withdrawn
+    if(amount>claimableRewardAmount()){
+         revert NotEnoughRewardsAvailable();
+    }
+    
+    // If alternativeWithdrawalAddress == address(0), rewards go to msg.sender (default).
+    // Otherwise, rewards go to alternativeWithdrawalAddress.
+    address to = alternativeWithdrawalAddress == address(0) ? msg.sender:alternativeWithdrawalAddress;
+    
+    // Transfer the tokens
+    _transfer(rewardToken, to, amount);
+    
+    emit RewardsWithdrawn(to, amount);
+}
+
+
+ 
+
 /////////////////////////////////////
 /////// View Functions ///////////// 
 ///////////////////////////////////
