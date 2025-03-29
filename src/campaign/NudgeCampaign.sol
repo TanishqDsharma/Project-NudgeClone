@@ -345,14 +345,36 @@ function handleReallocation(
         }
     }
 
+    /**
+     * @notice Calls the getBalanceOfSelf function to fetch the current balance of the 
+     * 
+     * rewardToken in the contract.
+     *      If rewardToken is: ETH, it retrieves address(this).balance (contract’s ETH balance). 
+     *      An ERC-20 token, it retrieves IERC20(rewardToken).balanceOf(address(this))(contract’s ERC-20 bal).
+     * 
+     * pendingRewards tracks rewards that have been assigned but not yet claimed by users.Since ,
+     * these rewards are reserved, we subtract them from the total balance.
+     * 
+     * accumalatedFees represents transaction fees or protocol fees collected from rewards.
+     * These fees are not meant to be claimable rewards for users.
+     */
     function claimableRewardAmount() public view returns(uint256){
         return getBalanceOfSelf(rewardToken) - pendingRewards - accumulatedFees ;
     }
 
+    /**
+     * 
+     * @param rewardAmountInclusingFees Total rewards including fees
+     * @return userRewards  The portion of rewardAmountIncludingFees that goes to the user
+     * @return fees The portion Returns as Fees
+     */
     function calculateUserRewardsAndFees(uint256 rewardAmountInclusingFees) public view returns(
         uint256 userRewards, uint256 fees
     ) {
+
+        // Gets only the fees amount from the total Rewards
         fees = (rewardAmountInclusingFees*feeBps)/BPS_DENOMINATOR;
+        // Calculate userRewards after deducting the totalFees from it
         userRewards = rewardAmountInclusingFees - fees;
 
     }
