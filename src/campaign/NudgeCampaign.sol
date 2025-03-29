@@ -232,7 +232,7 @@ function handleReallocation(
 ) external payable whenNotPaused{
 
     // Check if campaign is active or can be activated
-
+    _validateAndActivateCampaignIfReady();
     // Check if the msg.sender is authorized for swapping
     if(!factory.hasRole(factory.SWAP_CALLER_ROLE(), msg.sender)){
         revert UnauthorizedSwapCaller();
@@ -423,6 +423,28 @@ function handleReallocation(
 /////////////////////////////////////
 /////// Internal Functions /////////
 ///////////////////////////////////
+
+/**
+ * @notice Checks if campaign is active or can be activated based on current timestamp
+ */
+function _validateAndActivateCampaignIfReady() internal {
+    
+    if(!isCampaignActive){
+    // Only auto-activiate if the campaign is not manually deactiviated and 
+    // if the start time has been reached
+    if(!_manuallyDeactivated && block.timestamp >=startTimestamp){
+        // Automatically activate the campaign if start time is reached
+        isCampaignActive=true;
+    }else if(block.timestamp<startTimestamp){
+        // If startTimestamp is not reached revert
+        revert StartDateNotReached();
+    }else{
+        // If campaign was manually deactivated, revert with InactiveCampaign. 
+        revert InactiveCampaign();
+    }
+
+    }
+}
 
 /**
  * @param token addres of the token to transfer
