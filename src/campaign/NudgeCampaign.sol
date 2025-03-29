@@ -383,16 +383,26 @@ function handleReallocation(
 /////// Internal Functions /////////
 ///////////////////////////////////
 
+/**
+ * @param token addres of the token to transfer
+ * @param to address of the recipient
+ * @param amount the amount to transfer
+ * 
+ */
+
 function _transfer(
     address token,
     address to,
     uint256 amount
 ) internal{
+    // If token is ETH , we use .call to transfer funds. Sends ETH to to using Solidity’s .call() function.
     if(token==NATIVE_TOKEN_ETH){
+        // (bool sent,) → Stores whether the transaction was successful (true) or failed (false).
         (bool sent,)=to.call{value:amount}("");
         if(!sent){
             revert NativeTokenTransferFailed();
         }else{
+        // Otherwise using safeTransfer to transfer Erc20 funds.
             SafeERC20.safeTransfer(IERC20(token), to, amount);
         }
     }
