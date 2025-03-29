@@ -379,6 +379,47 @@ function handleReallocation(
 
     }
 
+    
+   /**
+    * 
+    * @return _holdingPeriodInSeconds 
+    * @return _targetToken 
+    * @return _rewardToken 
+    * @return _rewardPPQ 
+    * @return _startTimestamp 
+    * @return _isCampaignActive 
+    * @return _pendingRewards 
+    * @return _totalReallocatedAmount 
+    * @return _distributedRewards 
+    * @return _claimableRewards 
+    */
+    function getCampaignInfo(
+        
+    ) external view returns(
+        uint32 _holdingPeriodInSeconds,
+        address _targetToken,
+        address _rewardToken,
+        uint256 _rewardPPQ,
+        uint256 _startTimestamp,
+        bool _isCampaignActive,
+        uint256 _pendingRewards,
+        uint256 _totalReallocatedAmount,
+        uint256 _distributedRewards,
+        uint256 _claimableRewards) {
+         return (
+            holdingPeriodInSeconds,
+            targetToken,
+            rewardToken,
+            rewardPPQ,
+            startTimestamp,
+            isCampaignActive,
+            pendingRewards,
+            totalReallocatedAmount,
+            distributedRewards,
+            claimableRewardAmount()
+        );
+    }
+
 /////////////////////////////////////
 /////// Internal Functions /////////
 ///////////////////////////////////
