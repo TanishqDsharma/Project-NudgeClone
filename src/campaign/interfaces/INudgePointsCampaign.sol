@@ -15,6 +15,7 @@ interface INudgePointsCampaign is IBaseNudgeCampaign {
     error InvalidInputArrayLengths();
     error InvalidTargetToken();
     error CampaignAlreadyExists();
+    error InvalidToTokenReceived();
 
     
     // Events

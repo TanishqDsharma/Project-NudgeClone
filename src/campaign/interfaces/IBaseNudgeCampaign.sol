@@ -13,9 +13,9 @@ interface IBaseNudgeCampaign {
 
     error CampaignPaused();
     error UnauthorizedSwapCaller();
-    error Unautorized();
+    error Unauthorized();
     error InsufficientAmountReceived();
-    error InvalidToTokenRecevied();
+    error InvalidToTokenRecevied(address toToken);
 
     //Enums 
 
@@ -51,18 +51,18 @@ interface IBaseNudgeCampaign {
 
     // functions
 
-    // external function
-    function handleReallocation(
-        uint256 campaignId,
-        address userAddress,
-        address toToken,
-        uint256 toAmount,
-        bytes memory data
-    ) external payable;
+    // // external function
+    // function handleReallocation(
+    //     uint256 campaignId,
+    //     address userAddress,
+    //     address toToken,
+    //     uint256 toAmount,
+    //     bytes memory data
+    // ) external payable;
 
-    // internal function
+    // // internal function
 
-    function getBalanceOfSelf(address token) external view returns(uint256);
+    // function getBalanceOfSelf(address token) external view returns(uint256);
 
 
 }
