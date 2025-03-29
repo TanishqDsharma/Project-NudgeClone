@@ -34,12 +34,12 @@ interface INudgeCampaign is IBaseNudgeCampaign {
     // function rescueTokens(address token) external returns (uint256);
 
     // // View functions
-    // function getBalanceOfSelf(address token) external view returns (uint256);
-    // function claimableRewardAmount() external view returns (uint256);
+    function getBalanceOfSelf(address token) external view returns (uint256);
+    function claimableRewardAmount() external view returns (uint256);
     function getRewardAmountIncludingFees(uint256 toAmount) external view returns (uint256);
-    // function calculateUserRewardsAndFees(
-    //     uint256 rewardAmountIncludingFees
-    // ) external view returns (uint256 userRewards, uint256 fees);
+    function calculateUserRewardsAndFees(
+        uint256 rewardAmountIncludingFees
+    ) external view returns (uint256 userRewards, uint256 fees);
     // function getCampaignInfo()
     //     external
     //     view
