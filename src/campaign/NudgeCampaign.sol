@@ -328,6 +328,37 @@ function handleReallocation(
 }
 
 /////////////////////////////////////
+/////// Admin Functions ////////////
+///////////////////////////////////
+
+/**
+ * @notice invalidate specifies participants
+ * @param pIDs Array of participation
+ * @dev only callable by the operator role
+ */
+function invalidateParticipations(uint256[] calldata pIDs) 
+        external onlyNudgeOperator(){
+
+    for(uint256 i=0;i<=pIDs.length;i++){
+        // Accesses the Participation struct stored at index pIDs[i]
+        Participation storage participation = participations[pIDs[i]];
+
+        // Checks if the participation is already invalid.
+        if(participation.status != ParticipationStatus.PARTICIPATING){
+            continue;
+        }
+
+        // Changes the status from PARTICIPATING to INVALIDATED.
+        participation.status = ParticipationStatus.INVALIDATED;
+        // Subtracts the invalidated reward from pendingRewards.
+        // Ensures the system does not distribute rewards to invalid participations.
+        pendingRewards-=participation.rewardAmount;
+    }
+    emit ParticipationInvalidated(pIDs);
+
+}
+
+/////////////////////////////////////
 /////// View Functions ///////////// 
 ///////////////////////////////////
 
@@ -445,6 +476,8 @@ function _validateAndActivateCampaignIfReady() internal {
 
     }
 }
+
+
 
 /**
  * @param token addres of the token to transfer
