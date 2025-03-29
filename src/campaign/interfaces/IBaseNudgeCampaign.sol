@@ -28,12 +28,12 @@ interface IBaseNudgeCampaign {
 
     // Structs
 
-    struct Participation {
+     struct Participation {
         ParticipationStatus status;
         address userAddress;
         uint256 toAmount;
-        uint256 userAmount;
-        uint256 startTimstamp;
+        uint256 rewardAmount;
+        uint256 startTimestamp;
         uint256 startBlockNumber;
     }
 
@@ -41,7 +41,7 @@ interface IBaseNudgeCampaign {
 
     event NewParticipation(
         uint256 indexed campaignId,
-        uint256 indexed userAddress,
+        address indexed userAddress,
         uint256 pID,
         uint256 toAmount,
         uint256 entitledRewards,
