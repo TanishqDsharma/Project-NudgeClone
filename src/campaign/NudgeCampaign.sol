@@ -381,17 +381,17 @@ function handleReallocation(
 
     
    /**
-    * 
-    * @return _holdingPeriodInSeconds 
-    * @return _targetToken 
-    * @return _rewardToken 
-    * @return _rewardPPQ 
-    * @return _startTimestamp 
-    * @return _isCampaignActive 
-    * @return _pendingRewards 
-    * @return _totalReallocatedAmount 
-    * @return _distributedRewards 
-    * @return _claimableRewards 
+    * @notice Returns all the information about the campaign
+    * @return _holdingPeriodInSeconds Duration users must hold token
+    * @return _targetToken Address of the token user need to hold
+    * @return _rewardToken Address of the token used for rewards
+    * @return _rewardPPQ Reward parameter in parts per quadrillion
+    * @return _startTimestamp  When the campaign becomes active
+    * @return _isCampaignActive Whether the campaign is currently active
+    * @return _pendingRewards Total rewards pending claim
+    * @return _totalReallocatedAmount Total amount of tokens reallocated
+    * @return _distributedRewards Total rewards distributed
+    * @return _claimableRewards Amount of rewards available for distibution.
     */
     function getCampaignInfo(
         
