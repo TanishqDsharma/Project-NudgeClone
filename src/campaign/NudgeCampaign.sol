@@ -263,10 +263,112 @@ function handleReallocation(
         }
     }
 
+    // Contract instance 
     IERC20 tokenReceived = IERC20(toToken);
+    // Getting the balance of the sender
     uint256 balanceOfSender = tokenReceived.balanceOf(msg.sender);
-    uint256 balanceBefore = getBalanceOfSelf
+    // Getting the balance of the contract before any transfer happens
+    uint256 balanceBefore = getBalanceOfSelf(toToken) ;
 
+    // Is a safe way to transfer ERC20 tokens from msg.sender to address(this),
+    // preventing failures due to faulty ERC20 implementations. The contract is 
+    // reciving the tokens.
+    SafeERC20.safeTransferFrom(tokenReceived, msg.sender, address(this), balanceOfSender);
+
+    // AmountReceived is less than toAmount than revert
+    if(amountReceived<toAmount){
+        revert InsufficientAmountReceived();
+    }
+
+    // This function transfers amountReceived tokens from the contract to userAddress.
+    // Even though the contract initially received tokens, they still need to be sent 
+    // to the intended recipient. (Think like a swap)
+    _transfer(toToken,userAddress,amountReceived);
+
+    // The totalReallocatedAmount keeps tracks of all the funds reallocated to the campaign
+    // amountReceived is the amount of tokens that were just received in the transaction and now
+    // these are added to the old value of totalReallocatedAmount.
+    totalReallocatedAmount+=amountReceived;
+    
+    // Calculating total rewards including the platform fees
+    uint256 rewardsAmountIncludingFees = getRewardAmountIncludingFees(amountReceived);
+    // Total Rewards Available to claim
+    uint256 rewardsAvailable = claimableRewardAmount();
+
+    // If rewardsAmountIncludingFees is greated than rewardsAvailable then revert
+    if(rewardsAmountIncludingFees>rewardsAvailable){
+        revert NotEnoughRewardsAvailable();
+    }
+
+    // Splitting so total Rewards into two parts: 
+       // 1. Rewards that user will receive and fees that associated with the platform
+    (uint256 userRewards, uint256 fees) = calculateUserRewardsAndFees(rewardsAmountIncludingFees);
+
+    // pendingRewards updated with users rewards so that it can be claimed later
+    pendingRewards+=userRewards;
+    // Acculatedfees updated with more fees 
+    accumulatedFees+=fees;
+
+    // Increments that participation ID to uniquely track each user's participation
+    pID++;
+
+    // Store the participation details
+    participations[pID] = Participation({
+        status: ParticipationStatus.PARTICIPATING,
+        userAddress:userAddress,
+        toAmount: amountReceived,
+        rewardAmount: userRewards,
+        startTimestamp: block.timestamp,
+        startBlockNumber: block.number
+    });
+
+    emit NewParticipation(campaignId_, userAddress, pID, amountReceived, userRewards, fees, data);
+
+
+}
+
+/////////////////////////////////////
+/////// View Functions ///////////// 
+///////////////////////////////////
+
+
+    function getBalanceOfSelf(address token) public view returns(uint256){
+        if(token==NATIVE_TOKEN_ETH){
+            return address(this).balance;
+        }else{
+            return IERC20(token).balanceOf(address(this));
+        }
+    }
+
+    function claimableRewardAmount() public view returns(uint256){
+        return getBalanceOfSelf(rewardToken) - pendingRewards - accumulatedFees ;
+    }
+
+    function calculateUserRewardsAndFees(uint256 rewardAmountInclusingFees) public view returns(
+        uint256 userRewards, uint256 fees
+    ) {
+        fees = (rewardAmountInclusingFees*feeBps)/BPS_DENOMINATOR;
+        userRewards = rewardAmountInclusingFees - fees;
+
+    }
+
+/////////////////////////////////////
+/////// Internal Functions /////////
+///////////////////////////////////
+
+function _transfer(
+    address token,
+    address to,
+    uint256 amount
+) internal{
+    if(token==NATIVE_TOKEN_ETH){
+        (bool sent,)=to.call{value:amount}("");
+        if(!sent){
+            revert NativeTokenTransferFailed();
+        }else{
+            SafeERC20.safeTransfer(IERC20(token), to, amount);
+        }
+    }
 }
 
 }
